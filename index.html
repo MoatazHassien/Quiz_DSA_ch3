@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chapter 3 – Stack & Queue Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b12;--surface:#0c1220;--card:#111827;--border:#1f2d47;
+  --text:#dde6f5;--dim:#5a6a8a;--accent:#38bdf8;--accent2:#0ea5e9;
+  --correct:#22c55e;--wrong:#ef4444;
+  --tracing:#a78bfa;--code:#fb923c;--theory:#34d399;--tricky:#f472b6;
+  --radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;min-height:100vh;
+  background-image:radial-gradient(ellipse 80% 50% at 50% -20%,rgba(56,189,248,.08),transparent)}
+a{color:inherit;text-decoration:none}
+
+/* ── HEADER ── */
+.header{position:sticky;top:0;z-index:100;background:rgba(7,11,18,.85);
+  backdrop-filter:blur(16px);border-bottom:1px solid var(--border);
+  padding:14px 28px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.header-title{font-size:1.05rem;font-weight:700;color:var(--accent);white-space:nowrap}
+.header-title span{color:var(--dim);font-weight:400;font-size:.85rem;margin-left:6px}
+.progress-wrap{flex:1;min-width:160px}
+.progress-bar-bg{height:6px;background:var(--border);border-radius:99px;overflow:hidden}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));
+  border-radius:99px;transition:width .4s ease}
+.progress-label{font-size:.72rem;color:var(--dim);margin-top:4px;display:flex;justify-content:space-between}
+.score-badge{background:var(--surface);border:1px solid var(--border);
+  border-radius:99px;padding:5px 16px;font-size:.85rem;font-weight:600;white-space:nowrap}
+.score-badge .correct-count{color:var(--correct)}
+.score-badge .wrong-count{color:var(--wrong)}
+
+/* ── MAIN ── */
+.main{max-width:820px;margin:0 auto;padding:32px 20px 80px}
+
+/* ── QUESTION CARD ── */
+.q-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:28px;margin-bottom:18px;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.q-meta{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.q-num{font-size:.8rem;color:var(--dim);font-weight:500}
+.q-type{font-size:.72rem;font-weight:700;padding:3px 11px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em}
+.q-type.Tracing{background:rgba(167,139,250,.15);color:var(--tracing);border:1px solid rgba(167,139,250,.3)}
+.q-type.Code{background:rgba(251,146,60,.15);color:var(--code);border:1px solid rgba(251,146,60,.3)}
+.q-type.Theoretical{background:rgba(52,211,153,.15);color:var(--theory);border:1px solid rgba(52,211,153,.3)}
+.q-type.Tricky{background:rgba(244,114,182,.15);color:var(--tricky);border:1px solid rgba(244,114,182,.3)}
+
+.q-text{font-size:1rem;line-height:1.65;font-weight:400;margin-bottom:20px;color:var(--text)}
+.q-text code,.q-code{font-family:'JetBrains Mono',monospace;font-size:.82rem;background:rgba(255,255,255,.06);
+  padding:2px 7px;border-radius:5px;color:#93c5fd}
+pre.q-code-block{background:#0a1525;border:1px solid var(--border);border-radius:9px;
+  padding:14px 16px;margin:12px 0;font-family:'JetBrains Mono',monospace;font-size:.8rem;
+  line-height:1.7;color:#93c5fd;overflow-x:auto;white-space:pre}
+pre.q-code-block .kw{color:#c084fc}
+pre.q-code-block .cm{color:#4b6b8a;font-style:italic}
+
+/* ── OPTIONS ── */
+.options{display:flex;flex-direction:column;gap:10px}
+.option-btn{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;
+  padding:13px 18px;text-align:left;cursor:pointer;transition:all .2s;
+  font-family:'Outfit',sans-serif;font-size:.9rem;color:var(--text);display:flex;align-items:flex-start;gap:12px;
+  line-height:1.5}
+.option-btn .opt-label{font-weight:700;font-family:'JetBrains Mono',monospace;font-size:.8rem;
+  color:var(--dim);min-width:18px;margin-top:1px}
+.option-btn:hover:not(:disabled){border-color:var(--accent);background:rgba(56,189,248,.06);transform:translateX(3px)}
+.option-btn:disabled{cursor:default}
+.option-btn.correct{background:rgba(34,197,94,.12);border-color:var(--correct);color:#bbf7d0}
+.option-btn.correct .opt-label{color:var(--correct)}
+.option-btn.wrong{background:rgba(239,68,68,.12);border-color:var(--wrong);color:#fecaca}
+.option-btn.wrong .opt-label{color:var(--wrong)}
+.option-btn.reveal{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.4);color:#86efac}
+.option-btn.reveal .opt-label{color:var(--correct)}
+
+/* ── FEEDBACK ── */
+.feedback-box{margin-top:16px;padding:14px 18px;border-radius:10px;font-size:.88rem;line-height:1.6;display:none}
+.feedback-box.show{display:block;animation:fadeIn .25s ease}
+.feedback-box.fb-correct{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#bbf7d0}
+.feedback-box.fb-wrong{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#fecaca}
+.feedback-icon{font-size:1.1rem;margin-right:6px}
+
+/* ── NEXT BTN ── */
+.next-btn{display:none;margin-top:20px;background:linear-gradient(135deg,var(--accent2),var(--accent));
+  color:#07111f;font-weight:700;font-size:.95rem;padding:12px 32px;border:none;border-radius:99px;
+  cursor:pointer;font-family:'Outfit',sans-serif;transition:opacity .2s,transform .15s}
+.next-btn:hover{opacity:.9;transform:scale(1.02)}
+.next-btn.show{display:inline-block;animation:fadeIn .3s ease}
+
+/* ── RESULTS ── */
+.results{display:none;text-align:center;padding:40px 20px}
+.results.show{display:block;animation:fadeIn .5s ease}
+.results-circle{width:160px;height:160px;border-radius:50%;margin:0 auto 28px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border:4px solid var(--accent);background:var(--surface);position:relative}
+.results-pct{font-size:2.8rem;font-weight:800;color:var(--accent)}
+.results-label{font-size:.8rem;color:var(--dim)}
+.results-title{font-size:1.8rem;font-weight:700;margin-bottom:8px}
+.results-sub{color:var(--dim);margin-bottom:32px;font-size:.95rem}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:32px}
+.res-stat{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center}
+.res-stat-val{font-size:1.6rem;font-weight:800}
+.res-stat-label{font-size:.75rem;color:var(--dim);margin-top:4px}
+.cat-breakdown{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:left;margin-bottom:24px}
+.cat-breakdown h3{font-size:.85rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px}
+.cat-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.cat-name{font-size:.85rem;font-weight:600;min-width:130px}
+.cat-bar-bg{flex:1;height:8px;background:var(--border);border-radius:99px;overflow:hidden}
+.cat-bar-fill{height:100%;border-radius:99px;transition:width .8s ease}
+.cat-score{font-size:.8rem;color:var(--dim);min-width:50px;text-align:right}
+.retry-btn{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#07111f;
+  font-weight:700;font-size:1rem;padding:14px 40px;border:none;border-radius:99px;
+  cursor:pointer;font-family:'Outfit',sans-serif;transition:opacity .2s,transform .15s}
+.retry-btn:hover{opacity:.9;transform:scale(1.02)}
+
+/* ── LEGEND ── */
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;padding:14px 18px;
+  background:var(--surface);border:1px solid var(--border);border-radius:10px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.78rem;color:var(--dim)}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+
+@media(max-width:600px){
+  .main{padding:20px 12px 60px}
+  .q-card{padding:20px}
+  .header{padding:10px 16px;gap:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-title">Chapter 3 <span>Stack &amp; Queue</span></div>
+  <div class="progress-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="pbar" style="width:0%"></div></div>
+    <div class="progress-label"><span id="plabel">Question 1 of 100</span><span id="pct">0%</span></div>
+  </div>
+  <div class="score-badge">✓ <span class="correct-count" id="sc">0</span> &nbsp;✗ <span class="wrong-count" id="sw">0</span></div>
+</div>
+
+<div class="main">
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>Tracing (35)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fb923c"></div>Choose Correct Code (25)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#34d399"></div>Theoretical (15)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f472b6"></div>Tricky (25)</div>
+  </div>
+
+  <div id="quiz-area"></div>
+
+  <div class="results" id="results">
+    <div class="results-circle"><div class="results-pct" id="rpct">0%</div><div class="results-label">Score</div></div>
+    <div class="results-title" id="rtitle">Quiz Complete!</div>
+    <div class="results-sub" id="rsub"></div>
+    <div class="results-grid">
+      <div class="res-stat"><div class="res-stat-val" style="color:var(--correct)" id="rright">0</div><div class="res-stat-label">Correct</div></div>
+      <div class="res-stat"><div class="res-stat-val" style="color:var(--wrong)" id="rwrong">0</div><div class="res-stat-label">Wrong</div></div>
+      <div class="res-stat"><div class="res-stat-val" style="color:var(--accent)" id="rtotal">100</div><div class="res-stat-label">Total</div></div>
+    </div>
+    <div class="cat-breakdown">
+      <h3>Performance by Category</h3>
+      <div class="cat-row">
+        <div class="cat-name" style="color:var(--tracing)">Tracing</div>
+        <div class="cat-bar-bg"><div class="cat-bar-fill" id="cb-tracing" style="background:var(--tracing);width:0%"></div></div>
+        <div class="cat-score" id="cs-tracing">0/35</div>
+      </div>
+      <div class="cat-row">
+        <div class="cat-name" style="color:var(--code)">Code</div>
+        <div class="cat-bar-bg"><div class="cat-bar-fill" id="cb-code" style="background:var(--code);width:0%"></div></div>
+        <div class="cat-score" id="cs-code">0/25</div>
+      </div>
+      <div class="cat-row">
+        <div class="cat-name" style="color:var(--theory)">Theoretical</div>
+        <div class="cat-bar-bg"><div class="cat-bar-fill" id="cb-theory" style="background:var(--theory);width:0%"></div></div>
+        <div class="cat-score" id="cs-theory">0/15</div>
+      </div>
+      <div class="cat-row">
+        <div class="cat-name" style="color:var(--tricky)">Tricky</div>
+        <div class="cat-bar-bg"><div class="cat-bar-fill" id="cb-tricky" style="background:var(--tricky);width:0%"></div></div>
+        <div class="cat-score" id="cs-tricky">0/25</div>
+      </div>
+    </div>
+    <button class="retry-btn" onclick="restart()">↺ Retry Quiz</button>
+  </div>
+</div>
+
+<script>
+const Q=[
+// ── TRACING (35) ──────────────────────────────────────────────────
+{t:"Tracing",q:"Array-based stack, <code>max-size=5</code>, <code>top=-1</code>. After <code>Push(3), Push(7), Pop(), Push(1)</code> — what is the value of <code>top</code>?",o:["A) 0","B) 1","C) 2","D) -1"],a:1,e:"Push(3)→top=0, Push(7)→top=1, Pop()→top=0, Push(1)→top=1"},
+{t:"Tracing",q:"Array-based stack, <code>top=-1</code>. After <code>Push(5), Push(8)</code>, what does <code>Top()</code> return?",o:["A) 5","B) 8","C) -1","D) Error: stack underflow"],a:1,e:"Top() returns the element at <code>stack[top]</code> without removing it. After Push(5) and Push(8), top=1 and stack[1]=8."},
+{t:"Tracing",q:"Array-based stack with <code>max-size=3</code>, <code>top=-1</code>. Perform: <code>Push(4), Push(9), Push(2), Push(6)</code>. Which operation triggers Stack Overflow?",o:["A) Push(9)","B) Push(2)","C) Push(6)","D) No overflow occurs"],a:2,e:"max-size=3, so valid indices are 0,1,2. After Push(4)→top=0, Push(9)→top=1, Push(2)→top=2. Now top=max-size-1=2, stack is full. Push(6) triggers overflow."},
+{t:"Tracing",q:"Array-based stack. Perform: <code>Push(5), Push(8), Pop(), Pop(), Pop()</code>. What happens on the third <code>Pop()</code>?",o:["A) Returns 0","B) Returns 5","C) Stack underflow error","D) Returns -1"],a:2,e:"After Push(5) and Push(8): stack=[5,8]. Pop()→8, Pop()→5. Stack is now empty (top=-1). Third Pop() finds top=-1 → Stack Underflow error."},
+{t:"Tracing",q:"Array-based stack with <code>max-size=5</code>, <code>top=-1</code>. After <code>Push(1), Push(2), Push(3)</code>, what is <code>stack[0]</code>?",o:["A) 3","B) 2","C) 1","D) Undefined"],a:2,e:"Push(1): top=0, stack[0]=1. Push(2): top=1, stack[1]=2. Push(3): top=2, stack[2]=3. So stack[0]=1, the first element pushed."},
+{t:"Tracing",q:"Perform the following on an array stack: <code>Push(5), Push(8), Pop(), Push(2), Push(5), Pop(), Pop(), Pop(), Push(1), Pop()</code>. What is the sequence of values returned by all <code>Pop()</code> calls?",o:["A) 8, 5, 2, 5, 1","B) 8, 5, 5, 2, 1","C) 5, 8, 2, 5, 1","D) 8, 2, 5, 5, 1"],a:0,e:"Stack trace: Push5=[5], Push8=[5,8], Pop=8, Push2=[5,2], Push5=[5,2,5], Pop=5, Pop=2, Pop=5, Push1=[1], Pop=1 → sequence: 8,5,2,5,1"},
+{t:"Tracing",q:"Linked list-based stack, initially <code>top=null</code>. After <code>Push(3), Push(7)</code>, what does <code>top.data</code> equal?",o:["A) 3","B) 7","C) null","D) Both 3 and 7"],a:1,e:"In a linked list stack, Push(x) creates a new node, sets new.next=top, then top=new. After Push(3): top→[3|null]. After Push(7): top→[7|→3]. top.data=7."},
+{t:"Tracing",q:"Linked list stack. Perform: <code>Push(5), Push(2), Pop()</code>. After these operations, what does <code>top.data</code> equal?",o:["A) 2","B) 5","C) null","D) Error"],a:1,e:"Push(5): top→[5|null]. Push(2): top→[2|→5]. Pop() removes node with data=2, sets top=top.next→[5|null]. Now top.data=5."},
+{t:"Tracing",q:"Array-based queue with <code>max-size=5</code>, <code>front=rear=-1</code>. After <code>Enqueue(2), Enqueue(5), Enqueue(3), Dequeue()</code>, what is the value of <code>front</code>?",o:["A) 0","B) 1","C) 2","D) -1"],a:1,e:"Enqueue(2): front=rear=0. Enqueue(5): rear=1. Enqueue(3): rear=2. Dequeue(): front≠rear, so front=front+1=1."},
+{t:"Tracing",q:"Array-based queue. Perform: <code>Enqueue(10), Dequeue()</code>. After these two operations, what are the values of <code>front</code> and <code>rear</code>?",o:["A) front=0, rear=0","B) front=1, rear=0","C) front=rear=-1","D) front=rear=1"],a:2,e:"Enqueue(10): front=rear=0. Dequeue(): since front==rear (last element), y=queue[front], then front=rear=-1. Queue is empty again."},
+{t:"Tracing",q:"Array-based queue with <code>max-size=3</code>. Perform: <code>Enqueue(1), Enqueue(2), Enqueue(3), Enqueue(4)</code>. What happens at the 4th enqueue?",o:["A) All enqueued successfully","B) Enqueue(4) triggers Queue overflow","C) Enqueue(3) triggers overflow","D) rear becomes 4"],a:1,e:"After Enqueue(3): rear=2=max-size-1 → queue is FULL. Enqueue(4) calls IsFull() → true → prints error."},
+{t:"Tracing",q:"Array-based queue with <code>max-size=5</code>. After operations, <code>front=2, rear=4</code>. Is the queue full?",o:["A) Yes","B) No","C) Only if max-size=5","D) Cannot determine"],a:0,e:"Full condition for array queue: rear=max-size-1. Here rear=4=5-1=max-size-1 → queue is FULL."},
+{t:"Tracing",q:"Queue operations: <code>Enqueue(2), Enqueue(5), Dequeue()</code>. What does <code>Front()</code> return after these?",o:["A) 2","B) 5","C) Error","D) null"],a:1,e:"After Enqueue(2) and Enqueue(5): queue=[2,5], front=0, rear=1. Dequeue() removes 2 (front=1). Now Front() = queue[1] = 5."},
+{t:"Tracing",q:"Circular queue with <code>max-size=5</code>, <code>front=3, rear=4</code>. Where is the next element placed by <code>Enqueue(x)</code>?",o:["A) index 0","B) index 4","C) index 5","D) Cannot enqueue — check full first"],a:0,e:"IsFull check: front=(rear+1)%5=(4+1)%5=0. front=3≠0, so not full. Enqueue: rear=(4+1)%5=0, queue[0]=x."},
+{t:"Tracing",q:"Circular queue with <code>max-size=5</code>, initially <code>front=rear=-1</code>. After <code>Enqueue(5), Enqueue(3)</code>, what is <code>rear</code>?",o:["A) 0","B) 1","C) 2","D) -1"],a:1,e:"Enqueue(5): empty, so front=rear=0. Enqueue(3): not full, rear=(0+1)%5=1, queue[1]=3. rear=1."},
+{t:"Tracing",q:"Circular queue with <code>max-size=5</code>. After operations, <code>front=2, rear=1</code>. Is it full?",o:["A) Yes","B) No","C) Empty","D) Cannot determine without more info"],a:0,e:"Full condition: front=(rear+1)%max-size = (1+1)%5 = 2 = front → YES, it is full with 5 elements."},
+{t:"Tracing",q:"Linked list queue. Perform: <code>Enqueue(2), Enqueue(4), Enqueue(6), Dequeue()</code>. What does <code>front.data</code> equal after these operations?",o:["A) 2","B) 4","C) 6","D) null"],a:1,e:"Linked list queue inserts at rear and deletes from front. Queue: front→[2]→[4]→[6]←rear. Dequeue removes 2. Now front→[4]→[6]. front.data=4."},
+{t:"Tracing",q:"Array stack, <code>top=-1</code>. After <code>Push(10), Push(20), Push(30), Pop(), Top()</code>, what does <code>Top()</code> return?",o:["A) 10","B) 20","C) 30","D) -1"],a:1,e:"Stack after pushes: [10,20,30], top=2. Pop() removes 30, top=1. Top() returns stack[1]=20 without removing."},
+{t:"Tracing",q:"Stack operations: <code>Push(a), Push(b), Push(c), Pop(), Push(d), Pop(), Pop()</code>. What is the sequence returned by all <code>Pop()</code> calls?",o:["A) c, b, a","B) c, d, b","C) d, c, b","D) a, b, c"],a:1,e:"Stack trace: Push a=[a], Push b=[a,b], Push c=[a,b,c], Pop=c→[a,b], Push d=[a,b,d], Pop=d→[a,b], Pop=b→[a]. Sequence: c, d, b."},
+{t:"Tracing",q:"Array-based queue with <code>max-size=7</code>. Perform: <code>Enqueue(10),Enqueue(5),Enqueue(7),Enqueue(9),Enqueue(10),Dequeue(),Dequeue(),Dequeue(),Dequeue()</code>. After all operations, what are <code>front</code> and <code>rear</code>?",o:["A) front=rear=-1","B) front=4, rear=4","C) front=3, rear=4","D) front=4, rear=6"],a:1,e:"After 5 enqueues: front=0, rear=4. 4 dequeues: front advances to 4. After 4th dequeue, front=4=rear=4 → one element remains. front=rear=4."},
+{t:"Tracing",q:"Stack: <code>Push(A), Push(B), Push(C), Pop()</code>. What element is now on top?",o:["A) A","B) B","C) C","D) Stack is empty"],a:1,e:"After Push A, B, C: stack=[A,B,C], top=C. Pop() removes C. Now top is B."},
+{t:"Tracing",q:"Empty stack. Perform: <code>Push(1), Push(2), Pop(), Push(3), Pop(), Pop()</code>. Is the stack empty after all operations?",o:["A) Yes","B) No","C) Stack underflow occurred","D) Top is 1"],a:0,e:"Trace: [1]→[1,2]→[1]→[1,3]→[1]→[]. After all 3 pops, stack is empty."},
+{t:"Tracing",q:"Word reversal using stack: letters H, E, L, L, O are pushed in order. What is the output when all are popped?",o:["A) HELLO","B) OLLEH","C) HLLEO","D) EOHLH"],a:1,e:"Stack is LIFO. H pushed first, O last. Pop order: O,L,L,E,H → OLLEH."},
+{t:"Tracing",q:"Linked list stack. Perform: <code>Push(10), Push(20), Push(30), Pop(), Push(40)</code>. What is <code>top.data</code>?",o:["A) 10","B) 20","C) 30","D) 40"],a:3,e:"After pushes: top→[30]→[20]→[10]. Pop() removes 30, top→[20]→[10]. Push(40): top→[40]→[20]→[10]. top.data=40."},
+{t:"Tracing",q:"Array-based queue with <code>front=2, rear=5</code>. How many elements does the queue contain?",o:["A) 2","B) 3","C) 4","D) 5"],a:2,e:"Elements occupy indices 2,3,4,5 → count = rear - front + 1 = 5 - 2 + 1 = 4 elements."},
+{t:"Tracing",q:"Array-based stack, <code>max-size=10</code>, <code>top=4</code>. How many elements are currently in the stack?",o:["A) 4","B) 5","C) 6","D) 10"],a:1,e:"Elements are at indices 0,1,2,3,4 → count = top + 1 = 4 + 1 = 5 elements."},
+{t:"Tracing",q:"Balanced parentheses check on <code>\"{(A+B) + [C+D]}\"</code>. What is the result?",o:["A) Balanced","B) Not balanced — mismatched types","C) Compilation error","D) Stack overflow"],a:0,e:"Scanning: { pushed, ( pushed, ) pops ( ✓ match, [ pushed, ] pops [ ✓ match, } pops { ✓ match. End: empty stack → Balanced."},
+{t:"Tracing",q:"Balanced parentheses check on <code>\"[(])\"</code>. What is the result?",o:["A) Balanced","B) Not balanced — types mismatch","C) Stack underflow","D) Stack overflow"],a:1,e:"Scan: [ pushed, ( pushed. Then ] arrives → pop top which is ( — but ( ≠ ] → mismatch → Compilation Error."},
+{t:"Tracing",q:"Balanced parentheses check on <code>\")( \"</code>. What happens when scanning the first character?",o:["A) Push ) to stack","B) Try to pop from empty stack → error","C) Balanced","D) Push ( first"],a:1,e:"Scan: first char is ')' — it's a closing symbol. Check stack: it's empty. Empty stack on closing symbol → Compilation Error immediately."},
+{t:"Tracing",q:"Stack: <code>Push(7), Push(5), Top(), IsEmpty(), Pop(), Pop()</code>. What does <code>IsEmpty()</code> return?",o:["A) True","B) False","C) Error","D) 0"],a:1,e:"Before IsEmpty() is called, stack=[7,5]. IsEmpty() checks if top==-1. top=1≠-1 → returns False."},
+{t:"Tracing",q:"Array-based queue with <code>max-size=5</code>. After <code>Enqueue(A),Enqueue(B),Enqueue(C),Dequeue(),Dequeue()</code>, what is the value of <code>front</code>?",o:["A) 0","B) 1","C) 2","D) -1"],a:2,e:"Enqueue A,B,C: front=0, rear=2. Dequeue: front=1. Dequeue: front=2. final front=2."},
+{t:"Tracing",q:"Linked list queue: <code>Enqueue(2), Enqueue(4), Enqueue(6), Dequeue()</code>. After all ops, what are <code>front.data</code> and <code>rear.data</code>?",o:["A) front=4, rear=6","B) front=2, rear=6","C) front=6, rear=4","D) front=rear=4"],a:0,e:"Initial chain: front→[2]→[4]→[6]←rear. Dequeue removes 2. Now front→[4]→[6]←rear. front.data=4, rear.data=6."},
+{t:"Tracing",q:"Linked list stack: <code>Push(1),Push(2),Push(3),Pop(),Pop(),Pop(),Pop()</code>. What happens at the 4th <code>Pop()</code>?",o:["A) Returns 1","B) Returns null","C) Stack underflow error","D) Returns 0"],a:2,e:"After 3 pops, the stack is empty (top=null). 4th Pop() checks if(top==null) → Stack Underflow error."},
+{t:"Tracing",q:"Queue: <code>Enqueue(5), Enqueue(3), Dequeue(), Front()</code>. What does the second <code>Front()</code> return?",o:["A) 5","B) 3","C) Error — queue is empty","D) null"],a:1,e:"Enqueue 5, Enqueue 3 → queue=[5,3]. Dequeue() removes 5 → queue=[3]. Front() returns 3."},
+{t:"Tracing",q:"After <code>Push(1),Push(2),Push(3),Pop(),Pop(),Push(4),Pop(),Pop()</code>, what does the last <code>Pop()</code> return?",o:["A) 4","B) 3","C) 2","D) 1"],a:3,e:"Trace: [1]→[1,2]→[1,2,3]→Pop=3→[1,2]→Pop=2→[1]→Push(4)→[1,4]→Pop=4→[1]→Pop=1. Last Pop returns 1."},
+
+// ── CODE (25) ──────────────────────────────────────────────────────
+{t:"Code",q:"Which <code>Push(x)</code> implementation is correct for an array-based stack?",o:["A) <code>top=top+1; if(top==maxsize){error} else stack[top]=x</code>","B) <code>if(top==maxsize-1){error} else {top=top+1; stack[top]=x}</code>","C) <code>stack[top]=x; top=top+1</code>","D) <code>if(top==-1){error} else {stack[top+1]=x}</code>"],a:1,e:"Overflow must be checked BEFORE modifying top. Option B checks if top==maxsize-1 first, then increments top and assigns. This matches the lecture pseudocode."},
+{t:"Code",q:"Which <code>Pop()</code> implementation correctly handles stack underflow?",o:["A) <code>if(top==0){error} else {y=stack[top]; top--; return y}</code>","B) <code>if(top==-1){error} else {y=stack[top]; top=top-1; return y}</code>","C) <code>y=stack[top]; if(top==-1){error} else top--</code>","D) <code>if(top==maxsize){error} else {y=stack[top]; return y}</code>"],a:1,e:"Empty stack condition is top==-1. Check must happen BEFORE accessing stack[top]. Option B is correct: check top==-1 first, then save stack[top], decrement top, return value."},
+{t:"Code",q:"Which code correctly implements <code>IsEmpty()</code> for an array-based stack?",o:["A) <code>if(top==0) return true</code>","B) <code>if(top==-1) return true; else return false</code>","C) <code>if(top==maxsize-1) return true</code>","D) <code>if(stack[top]==null) return true</code>"],a:1,e:"Array-based stack is initially top=-1. Empty when top==-1. Option B correctly returns true iff top==-1, false otherwise."},
+{t:"Code",q:"Which code correctly implements linked list <code>Push(x)</code>?",o:["A) <code>new.data=x; new.next=null; top=new</code>","B) <code>new.data=x; new.next=top; top=new</code>","C) <code>top=new; new.data=x; new.next=top</code>","D) <code>new.next=top; top=new; new.data=x</code>"],a:1,e:"New node must point to current top BEFORE top is updated. Correct order: (1) new.data=x, (2) new.next=top, (3) top=new. Option B follows this exactly."},
+{t:"Code",q:"Which code correctly implements linked list <code>Pop()</code> when the stack has multiple elements?",o:["A) <code>temp=top; top=top.next; free(temp); return temp.data</code>","B) <code>y=top.data; top=null; return y</code>","C) <code>y=top.next.data; top=top.next; return y</code>","D) <code>temp=top.next; top=top; return temp.data</code>"],a:0,e:"Save top in temp, move top to top.next, save temp.data (before free), free temp, return value. Option A does this correctly — critically, temp.data is accessed before free."},
+{t:"Code",q:"Which code correctly implements <code>IsEmpty()</code> for a linked list stack?",o:["A) <code>if(top==-1) return true</code>","B) <code>if(top==null) return true; else return false</code>","C) <code>if(top.data==null) return true</code>","D) <code>if(top==0) return true</code>"],a:1,e:"Linked list stack: empty when top==null (no nodes). -1 and 0 are array-based indicators. Option B is correct."},
+{t:"Code",q:"Which code correctly implements <code>Enqueue(x)</code> for an array-based queue when the queue is currently EMPTY?",o:["A) <code>rear=rear+1; queue[rear]=x</code>","B) <code>front=rear=0; queue[0]=x</code>","C) <code>front=0; queue[rear]=x</code>","D) <code>queue[0]=x; front=rear=-1</code>"],a:1,e:"When queue is empty, the first element goes to index 0 and BOTH front and rear must be set to 0. Option B correctly initializes front=rear=0 and places x at queue[0]."},
+{t:"Code",q:"Which code correctly handles <code>Dequeue()</code> when <code>front==rear</code> (last element)?",o:["A) <code>y=queue[front]; front++; return y</code>","B) <code>y=queue[front]; front=rear=-1; return y</code>","C) <code>front=rear=-1; return queue[0]</code>","D) <code>y=queue[front]; rear=-1; return y</code>"],a:1,e:"When front==rear, it's the last element. After removal, queue becomes empty: front=rear=-1. Option B correctly saves the value first, resets both pointers to -1, then returns."},
+{t:"Code",q:"Which code correctly checks if an array-based queue is full?",o:["A) <code>if(rear==maxsize) return true</code>","B) <code>if(rear==maxsize-1) return true</code>","C) <code>if(front==rear) return true</code>","D) <code>if(rear-front==maxsize) return true</code>"],a:1,e:"Full condition: rear = maxsize-1 (last valid index). rear==maxsize would be out of bounds. front==rear is not full — it means one element. Option B is correct."},
+{t:"Code",q:"Which code correctly implements <code>Enqueue(x)</code> for a circular queue when the queue already has elements?",o:["A) <code>rear=rear+1; queue[rear]=x</code>","B) <code>rear=(rear+1)%maxsize; queue[rear]=x</code>","C) <code>front=(front+1)%maxsize; queue[front]=x</code>","D) <code>queue[rear]=(rear+1)%maxsize</code>"],a:1,e:"Circular queue uses modulo arithmetic to wrap around. rear=(rear+1)%maxsize advances rear circularly. Option B is correct. Option A fails when rear=maxsize-1."},
+{t:"Code",q:"Which code correctly checks the FULL condition for a circular queue?",o:["A) <code>rear==maxsize-1</code>","B) <code>front==(rear+1)%maxsize</code>","C) <code>front==rear</code>","D) <code>rear-front==maxsize-1</code>"],a:1,e:"Circular queue is full when the next position after rear (circularly) equals front. Condition: front==(rear+1)%maxsize. Note: front==rear alone means one element, not full."},
+{t:"Code",q:"Which code correctly implements <code>Enqueue(x)</code> for a linked list queue?",o:["A) <code>new.data=x; new.next=null; if(isEmpty){front=rear=new} else{rear.next=new; rear=new}</code>","B) <code>new.data=x; new.next=rear; front=new</code>","C) <code>rear=new; new.data=x; front.next=new</code>","D) <code>new.data=x; front=new; rear.next=new</code>"],a:0,e:"New node is appended at rear: new.next=null (it's the last). If empty: front=rear=new. Otherwise: link to current rear, advance rear. Option A is correct."},
+{t:"Code",q:"Which code correctly implements linked list <code>Dequeue()</code> when <code>front==rear</code> (last element)?",o:["A) <code>y=front.data; front=front.next; return y</code>","B) <code>y=front.data; front=rear=null; return y</code>","C) <code>front=null; return rear.data</code>","D) <code>y=rear.data; rear=front.next; return y</code>"],a:1,e:"Last element: after removal, both front AND rear must become null. Save front.data, set front=rear=null, return. Option B is correct."},
+{t:"Code",q:"Which correctly implements <code>Top()</code> / <code>Peek()</code> for an array stack?",o:["A) <code>return stack[top-1]</code>","B) <code>return stack[top]</code>","C) <code>y=stack[top]; top--; return y</code>","D) <code>return stack[top+1]</code>"],a:1,e:"Top() returns the element AT the current top pointer WITHOUT modifying it. <code>stack[top]</code> is the top element. Option C is Pop(), not Top(). Option B is correct."},
+{t:"Code",q:"Which correctly checks <code>IsEmpty()</code> for a circular queue?",o:["A) <code>if(front==rear) return true</code>","B) <code>if(rear==-1) return true</code>","C) <code>if(front==-1 && rear==-1) return true</code>","D) <code>if(front>rear) return true</code>"],a:2,e:"Circular queue is empty when both front AND rear equal -1 (initial state). front==rear alone is ambiguous (could be one element). Option C is correct."},
+{t:"Code",q:"What is WRONG with this Push implementation: <code>top=top+1; stack[top]=x;</code>",o:["A) Should decrement top first","B) No overflow check before incrementing top","C) Assignment order is reversed","D) Nothing is wrong"],a:1,e:"Stack overflow occurs when top=maxsize-1. This code increments top WITHOUT checking first, potentially writing out of bounds. The IsFull check must happen before modifying top."},
+{t:"Code",q:"Which <code>Top()</code> implementation has a CRITICAL bug?",o:["A) <code>if(top==-1){error} else {return stack[top]}</code>","B) <code>return stack[top]</code>","C) <code>if(isEmpty()){error} else return stack[top]</code>","D) <code>y=stack[top]; top--; return y</code>"],a:3,e:"Option D decrements top — that is Pop(), not Top(). Top()/Peek() must return the element WITHOUT removing it. The top-- is the bug."},
+{t:"Code",q:"Which code correctly implements <code>IsFull()</code> for an array-based stack?",o:["A) <code>if(top==maxsize) return true</code>","B) <code>if(top==maxsize-1) return true</code>","C) <code>if(top==0) return true</code>","D) <code>if(top>maxsize) return true</code>"],a:1,e:"Stack is full when top equals the last valid index: maxsize-1. top==maxsize would be out-of-bounds (one past the end). Option B is correct."},
+{t:"Code",q:"For <code>Enqueue(x)</code> in a non-empty, non-full array queue, which code is correct?",o:["A) <code>front=front+1; queue[front]=x</code>","B) <code>rear=rear+1; queue[rear]=x</code>","C) <code>queue[rear+1]=x</code> (without updating rear)","D) <code>front=0; queue[rear+1]=x</code>"],a:1,e:"Enqueue adds at the REAR. Increment rear first, then assign. Updating front is wrong. Not updating rear pointer is wrong. Option B is correct."},
+{t:"Code",q:"Which correctly initializes an array-based queue?",o:["A) <code>front=0; rear=0</code>","B) <code>front=-1; rear=0</code>","C) <code>front=rear=-1</code>","D) <code>front=rear=0</code>"],a:2,e:"Empty queue is represented by front=rear=-1. Setting either to 0 implies an element exists at index 0. Option C is the correct initialization."},
+{t:"Code",q:"In linked list queue <code>Dequeue()</code> with multiple elements, which is correct?",o:["A) <code>y=front.data; temp=front; front=front.next; free(temp); return y</code>","B) <code>y=front.data; front=null; return y</code>","C) <code>temp=rear; rear=rear.next; return temp.data</code>","D) <code>y=front.next.data; front=front.next; return y</code>"],a:0,e:"Save data, save temp pointer for freeing, advance front to front.next, free old node, return value. Option A follows all steps correctly."},
+{t:"Code",q:"Which code correctly implements word reversal using a stack?",o:["A) Push each letter; while not empty: print(Pop())","B) Pop each letter; while not empty: print(Push())","C) Push each letter; while not empty: print(Top())","D) Pop each letter; Push each result; print all"],a:0,e:"Algorithm: Push each character until end of word, then pop all (LIFO reverses order). Option A: push all, then pop-print loop is correct."},
+{t:"Code",q:"For balanced parentheses checking, when a closing symbol is encountered and the stack is EMPTY, what should happen?",o:["A) Push the closing symbol","B) Return 'balanced'","C) Return compilation error","D) Continue scanning"],a:2,e:"Closing symbol with empty stack → no matching opening symbol → Compilation Error. Option C is correct."},
+{t:"Code",q:"Which linked list stack <code>Pop()</code> correctly handles the SINGLE element case?",o:["A) <code>temp=top; top=top.next; free(temp); return temp.data</code>","B) <code>y=top.data; top=null; return y</code>","C) <code>top=null; return top.data</code>","D) <code>return top.data</code>"],a:1,e:"When single element: top.next=null, so top becomes null after pop. Option A also works (top.next=null so top=null). But Option B is simpler and cleaner. Option C sets top=null first then tries top.data which is null."},
+{t:"Code",q:"Which code correctly checks if the array queue's <code>IsEmpty()</code>?",o:["A) <code>if(front==-1) return true</code>","B) <code>if(rear==-1) return true</code>","C) <code>if(front==rear==-1) return true; else return false</code>","D) <code>if(front>rear) return true</code>"],a:2,e:"Queue is empty ONLY when both front AND rear equal -1. Checking just front or just rear alone is insufficient. Option C (front==rear==-1) is the correct and complete condition."},
+
+// ── THEORETICAL (15) ──────────────────────────────────────────────
+{t:"Theoretical",q:"What does LIFO stand for, and which data structure follows this principle?",o:["A) Last Index First Out — Queue","B) Last In First Out — Stack","C) Linked In First Out — Stack","D) Last In First Out — Queue"],a:1,e:"LIFO = Last In First Out. The Stack follows this principle: the last element pushed is the first one popped. Queues follow FIFO."},
+{t:"Theoretical",q:"Which data structure uses FIFO (First In First Out) ordering?",o:["A) Stack","B) Queue","C) Array (direct)","D) Linked List"],a:1,e:"Queue = FIFO. Elements are inserted at the rear and removed from the front. The first element enqueued is the first dequeued."},
+{t:"Theoretical",q:"What is the main advantage of a linked list stack over an array-based stack?",o:["A) Faster Push/Pop operations","B) No overflow possible — dynamic size grows as needed","C) Simpler implementation","D) Less memory per element"],a:1,e:"Array stack has a fixed maximum size (overflow possible). Linked list stack is dynamic — new nodes are allocated on the heap, so it can grow without overflow (until system memory is exhausted)."},
+{t:"Theoretical",q:"Stack Overflow occurs when:",o:["A) Stack is empty and Pop() is called","B) Stack is full and Push() is called","C) The top pointer equals -1","D) Array index 0 is accessed"],a:1,e:"Overflow = trying to push onto a FULL stack. Underflow = trying to pop from an EMPTY stack. Overflow occurs when top==maxsize-1 and Push is called."},
+{t:"Theoretical",q:"Which of the following is a classic application of a stack?",o:["A) Round-robin scheduling in processors","B) Checking balanced parentheses in a compiler","C) Printer spooling","D) CPU process scheduling"],a:1,e:"Stack applications: recursion, undo operations, balanced parentheses checking by compiler, traversing lists in reverse. Scheduling (round-robin, printer) are Queue applications."},
+{t:"Theoretical",q:"Which of these is a Queue application?",o:["A) Recursion implementation","B) Balanced parentheses checking","C) Round-robin scheduling in processors","D) Undo operations in editors"],a:2,e:"Queue applications include: round-robin scheduling (Priority Queue), input/output processing (e.g., Printer), serving requests in order. Recursion and undo use stacks."},
+{t:"Theoretical",q:"What is the main problem with a simple (non-circular) array-based queue?",o:["A) Cannot implement Dequeue","B) Wasted cells after Dequeue operations — queue may appear full with empty spaces","C) Cannot check if empty","D) All operations are O(n)"],a:1,e:"In a simple array queue, front advances after each Dequeue, leaving cells at the beginning unused. rear can reach maxsize-1 even though the queue isn't truly full. Solution: Circular Queue."},
+{t:"Theoretical",q:"A Circular Queue solves which specific problem of the array-based queue?",o:["A) Stack overflow","B) Slow dequeue operations","C) Wasted cells / queue appearing full while containing empty spaces","D) Underflow errors"],a:2,e:"Circular queue wraps around using modulo arithmetic: rear=(rear+1)%maxsize. This reuses slots freed by Dequeue, eliminating the 'phantom full' problem."},
+{t:"Theoretical",q:"In a linked list queue, <code>Enqueue</code> inserts at _____ and <code>Dequeue</code> removes from _____.",o:["A) front, rear","B) rear, front","C) rear, rear","D) front, front"],a:1,e:"Queue follows FIFO. New elements are appended at the rear (tail). Elements are removed from the front (head). This is the fundamental queue operation."},
+{t:"Theoretical",q:"Which of the following is NOT a standard stack operation?",o:["A) Push","B) Pop","C) Enqueue","D) IsEmpty"],a:2,e:"Enqueue/Dequeue are Queue operations. Stack operations are: Push, Pop, Top/Peek, IsEmpty, IsFull. These are the 5 standard operations from the lecture."},
+{t:"Theoretical",q:"What does the <code>Top()</code> / <code>Peek()</code> operation do?",o:["A) Removes and returns the top element","B) Returns the top element without removing it","C) Inserts at the top of the stack","D) Checks whether the stack is empty"],a:1,e:"Top()/Peek() is a read-only operation. It returns stack[top] without modifying top. Unlike Pop(), the element stays in the stack."},
+{t:"Theoretical",q:"In a linked list-based stack, after <code>Push(x)</code>, where does <code>top</code> point?",o:["A) The previous top element","B) The newly inserted node","C) null","D) The bottom (first-pushed) element"],a:1,e:"Push always inserts at the top. The new node becomes the new top. So top always points to the most recently pushed element."},
+{t:"Theoretical",q:"FILO stands for:",o:["A) First Index Last Out","B) First In Last Out","C) Fast Insert Last Order","D) Frequent In Late Out"],a:1,e:"FILO = First In Last Out. This is equivalent to LIFO and describes stack behavior: the first element pushed is the last one to be popped."},
+{t:"Theoretical",q:"In the balanced parentheses algorithm, the scan direction is:",o:["A) Right to left","B) Bottom to top of stack","C) Left to right","D) Both directions simultaneously"],a:2,e:"The algorithm scans the expression from LEFT TO RIGHT: opening symbols are pushed, closing symbols trigger a pop and match check. End state: empty stack = balanced."},
+{t:"Theoretical",q:"Which statement about a linked list queue is TRUE?",o:["A) Overflow is impossible with a linked list queue","B) IsEmpty() checks if rear==-1","C) Enqueue operates from the front","D) IsFull() always returns false for linked list"],a:0,e:"Linked list is dynamic — no fixed size → no overflow. IsEmpty checks front==rear==null. Enqueue inserts at REAR. Option A is the correct statement."},
+
+// ── TRICKY (25) ────────────────────────────────────────────────────
+{t:"Tricky",q:"Array-based stack, <code>max-size=3</code>, <code>top=-1</code>. Perform: <code>Push(1),Push(2),Push(3),Pop(),Pop(),Pop(),Push(4)</code>. After <code>Push(4)</code>, what is the state of <code>top</code> and <code>stack[0]</code>?",o:["A) top=0, stack[0]=4","B) top=-1, stack[0]=undefined","C) top=1, stack[0]=1","D) Stack overflow error"],a:0,e:"After 3 pops: top=-1 (empty). Push(4): top is not maxsize-1 (it's -1), so no overflow. top=0, stack[0]=4. The stack simply starts fresh."},
+{t:"Tricky",q:"Trace: <code>Push(A), Push(B), Pop(), Push(C), Pop(), Pop()</code>. What is the exact output sequence of all <code>Pop()</code> calls?",o:["A) A, B, C","B) B, C, A","C) C, B, A","D) B, A, C"],a:1,e:"Stack trace: [A]→[A,B]→Pop=B→[A]→[A,C]→Pop=C→[A]→Pop=A. Sequence: B, C, A."},
+{t:"Tricky",q:"Simple array queue with <code>max-size=5</code>. After: <code>Enqueue(1),Enqueue(2),Enqueue(3),Dequeue(),Dequeue(),Enqueue(4),Enqueue(5),Enqueue(6)</code>. What happens at <code>Enqueue(6)</code>?",o:["A) 6 placed at index 5","B) 6 placed at index 0 (wraps around)","C) Queue overflow error — rear=maxsize-1","D) 6 replaces element at front"],a:2,e:"After 3 enqueues: rear=2. 2 dequeues: front=2. Enqueue(4): rear=3. Enqueue(5): rear=4=maxsize-1 → FULL. Enqueue(6): IsFull()→true → overflow error. Simple array queue does NOT wrap around."},
+{t:"Tricky",q:"Circular queue with <code>max-size=5</code>. Current state: <code>front=0, rear=4</code>. Calling <code>Enqueue(x)</code> — what happens?",o:["A) x placed at index 0","B) x placed at index 5","C) Queue overflow error — queue is full","D) rear stays at 4, x overwrites"],a:2,e:"Full check: front==(rear+1)%max-size → 0==(4+1)%5=0 → YES, full. Enqueue triggers overflow error."},
+{t:"Tricky",q:"Stack: <code>Push(1),Push(2),Push(3),Pop(),Push(4),Push(5),Pop(),Pop()</code>. What remains in the stack?",o:["A) [1, 2]","B) [1, 3]","C) [2, 4]","D) [1, 2, 3]"],a:0,e:"Trace: [1]→[1,2]→[1,2,3]→Pop(3)→[1,2]→Push(4)→[1,2,4]→Push(5)→[1,2,4,5]→Pop(5)→[1,2,4]→Pop(4)→[1,2]. Remaining: [1,2] with top at index 1."},
+{t:"Tricky",q:"Linked list stack. After <code>Push(5), Push(3), Pop()</code>. What does <code>top.next</code> equal?",o:["A) node with data 3","B) node with data 5","C) null","D) -1"],a:2,e:"After Push(5): top→[5|null]. After Push(3): top→[3|→5]. Pop() removes node 3, top=top.next=node(5). node(5).next=null. So top.next=null."},
+{t:"Tricky",q:"Circular queue, <code>max-size=4</code>, <code>front=2, rear=3</code>. <code>Dequeue()</code> is called. What is the new state?",o:["A) front=3, rear=3 (one element left)","B) front=0, rear=3","C) front=rear=-1 (empty)","D) Error: queue underflow"],a:0,e:"front=2, rear=3. Not last element (front≠rear). Dequeue: y=queue[2], front=(2+1)%4=3. Now front=3, rear=3 — one element remains."},
+{t:"Tricky",q:"Which sequence of operations on a stack will cause Stack Underflow?",o:["A) Push(1), Pop(), Push(2)","B) Push(1), Push(2), Pop(), Pop()","C) Push(1), Pop(), Pop()","D) Push(1), Push(2), Pop()"],a:2,e:"Option C: Push(1)=[1], Pop()=1→[], Pop() on empty stack → UNDERFLOW. Options A and B have enough elements to complete all Pops."},
+{t:"Tricky",q:"Balanced parentheses: when we encounter <code>]</code> and the stack top is <code>(</code>, what is the correct action?",o:["A) Push ] to the stack","B) Pop ( and continue scanning","C) Compilation error — types mismatch","D) Return 'balanced' since a bracket was closed"],a:2,e:"Closing ] requires a matching [. Stack top is ( which is NOT a match → Compilation Error (mismatch). Bracket types must match exactly."},
+{t:"Tricky",q:"Queue: <code>Enqueue(A),Enqueue(B),Enqueue(C),Dequeue(),Enqueue(D),Dequeue()</code>. What element is at the FRONT after all operations?",o:["A) A","B) B","C) C","D) D"],a:2,e:"Queue: [A]→[A,B]→[A,B,C]→Deq(A)=[B,C]→[B,C,D]→Deq(B)=[C,D]. Front is now C."},
+{t:"Tricky",q:"Circular queue, <code>max-size=3</code>. Perform: <code>Enqueue(1),Enqueue(2),Enqueue(3),Dequeue(),Enqueue(4)</code>. After all operations, is the queue full?",o:["A) Yes, full with elements [4,2,3]","B) No, one slot is empty","C) Error: Enqueue(3) causes overflow","D) Error: Enqueue(4) causes overflow"],a:0,e:"E(1): f=r=0. E(2): r=1. E(3): r=2. IsFull: (2+1)%3=0=front → FULL. Wait — before E(3): is full? front=(rear+1)%3=(1+1)%3=2≠0 → NOT full. E(3): r=2. Now full. Deq(): y=1, f=(0+1)%3=1. E(4): not full? front=(2+1)%3=0≠1→not full. r=(2+1)%3=0, queue[0]=4. Full now: front=(0+1)%3=1=front→YES."},
+{t:"Tricky",q:"In a linked list queue, immediately after <code>Enqueue(5)</code> on an EMPTY queue, which is TRUE?",o:["A) front.data=5 and rear.data=5 (same node)","B) front.data=5 and rear is null","C) rear.data=5 and front is null","D) front and rear point to different nodes"],a:0,e:"On empty queue Enqueue, front=rear=new node with data=5. Both front and rear point to the SAME single node. So front.data=5 and rear.data=5."},
+{t:"Tricky",q:"Array-based stack with <code>max-size=5</code>, <code>top=4</code>. What happens when <code>Push(x)</code> is called?",o:["A) x pushed, top becomes 5","B) Stack overflow error","C) x replaces stack[4]","D) top resets to -1"],a:1,e:"top=4=maxsize-1=5-1=4. Overflow check: if(top==maxsize-1) → true → Stack Overflow error. x is NOT pushed."},
+{t:"Tricky",q:"When does Stack Underflow occur in a LINKED LIST stack?",o:["A) When top==null and Pop() is called","B) When Push() is called on full stack","C) When top.next==null and Pop() is called","D) When top.data==null"],a:0,e:"Linked list stack is empty when top==null. Underflow: Pop() called when top==null. Note: top.next==null just means one element (not empty). Option A is the correct condition."},
+{t:"Tricky",q:"Circular queue with <code>max-size=5</code>, <code>front=4, rear=3</code>. How many elements are in the queue?",o:["A) 1","B) 4","C) 5","D) 0"],a:2,e:"Check if full: front==(rear+1)%5=(3+1)%5=4=front → YES, FULL. A full circular queue with max-size=5 contains 5 elements."},
+{t:"Tricky",q:"After <code>Push(1),Push(2),Push(3),Pop(),Pop(),Push(4),Pop(),Pop()</code>. What does the last <code>Pop()</code> return?",o:["A) 4","B) 3","C) 2","D) 1"],a:3,e:"Trace: [1]→[1,2]→[1,2,3]→Pop(3)→[1,2]→Pop(2)→[1]→Push(4)→[1,4]→Pop(4)→[1]→Pop(1). Last Pop=1."},
+{t:"Tricky",q:"Stack used for undo: editing operations A, B, C, D, E are pushed in order. User undoes 3 times. What remains?",o:["A) [A, B, C]","B) [A, B]","C) [C, D, E]","D) [A]"],a:1,e:"Stack after 5 edits: [A,B,C,D,E] (E on top). Undo 3 times = Pop 3 times: E removed, D removed, C removed. Remaining: [A,B]."},
+{t:"Tricky",q:"In a simple (non-circular) array queue with <code>max-size=5</code>, 5 elements are enqueued, then 2 are dequeued. Attempting to enqueue again — what happens?",o:["A) New element placed successfully at index 0","B) Queue overflow error (rear=maxsize-1)","C) Circular wrapping occurs automatically","D) front resets to 0"],a:1,e:"After 5 enqueues: rear=4=maxsize-1. After 2 dequeues: front=2. Enqueue check: IsFull → rear==maxsize-1 → YES FULL → error. Simple array queue does NOT automatically wrap."},
+{t:"Tricky",q:"'The first element pushed onto a non-empty stack will be the last element popped, assuming no elements are removed in between.' Is this statement TRUE?",o:["A) True — LIFO guarantees this","B) False — it depends on stack size","C) True — only for linked list stacks","D) False — the second element is last"],a:0,e:"LIFO principle: the element at the bottom (first pushed on empty stack) can only be popped after ALL elements above it are removed. This is the fundamental LIFO guarantee."},
+{t:"Tricky",q:"Circular queue, <code>max-size=4</code>. All 4 slots occupied. After one <code>Dequeue()</code>, how many empty slots are there?",o:["A) 0","B) 1","C) 2","D) 4"],a:1,e:"Full circular queue has 0 empty slots. After one Dequeue(), one slot is freed (the position front was at). That slot becomes available for the next Enqueue. Empty slots = 1."},
+{t:"Tricky",q:"Stack: <code>Push(X), Push(Y), Pop(), Push(Z), Top()</code>. What does <code>Top()</code> return?",o:["A) X","B) Y","C) Z","D) null"],a:2,e:"[X]→[X,Y]→Pop(Y)→[X]→Push(Z)→[X,Z]. Top() returns stack[top]=Z without removing it."},
+{t:"Tricky",q:"Circular queue full condition: <code>front==(rear+1)%maxsize</code>. What if maxsize=1?",o:["A) Queue is always full","B) Queue can hold 1 element and full when front==(rear+1)%1=0=front always — ambiguous","C) Queue can never be full","D) Queue holds 0 elements"],a:1,e:"If maxsize=1: (rear+1)%1=0 always. front is also 0 when queue has 1 element. This creates ambiguity between empty and full. Circular queues typically need max-size≥2."},
+{t:"Tricky",q:"Balanced parentheses: scanning <code>\"{(a+z}\"</code>. What is the result?",o:["A) Balanced","B) Mismatch error when } is encountered with ( on top","C) Stack underflow","D) Stack overflow"],a:1,e:"Scan: { pushed→[{], ( pushed→[{,(]. } encountered → pop top = ( which is NOT a match for } → Compilation Error (mismatch)."},
+{t:"Tricky",q:"For <code>IsFull()</code> in a linked list queue:",o:["A) Check if rear==maxsize-1","B) Always returns false — no fixed size","C) Check if front==rear","D) Check if rear.next==null"],a:1,e:"Linked list queues are dynamic — they have NO fixed maximum size. Therefore IsFull() always returns false (or the method doesn't meaningfully apply). This is the key advantage over array-based queues."},
+{t:"Tricky",q:"Stack sequence: <code>Push(5), Push(8), Pop()</code>. Then the popped value is pushed back. What is the top of the stack now?",o:["A) 5","B) 8","C) 13","D) null"],a:1,e:"Push(5)=[5], Push(8)=[5,8]. Pop()=8, stack=[5]. Then push 8 back: stack=[5,8]. Top = 8."},
+];
+
+let order=[];
+let cur=0, correct=0, wrong=0;
+let catScore={Tracing:{c:0,t:35},Code:{c:0,t:25},Theoretical:{c:0,t:15},Tricky:{c:0,t:25}};
+let answered=false;
+
+function shuffle(arr){for(let i=arr.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
+
+function restart(){
+  cur=0;correct=0;wrong=0;
+  catScore={Tracing:{c:0,t:35},Code:{c:0,t:25},Theoretical:{c:0,t:15},Tricky:{c:0,t:25}};
+  order=shuffle([...Array(Q.length).keys()]);
+  document.getElementById('results').classList.remove('show');
+  document.getElementById('quiz-area').style.display='';
+  updateHeader();
+  renderQ();
+}
+
+function updateHeader(){
+  let total=Q.length;
+  let pct=Math.round((cur/total)*100);
+  document.getElementById('pbar').style.width=pct+'%';
+  document.getElementById('plabel').textContent=`Question ${Math.min(cur+1,total)} of ${total}`;
+  document.getElementById('pct').textContent=pct+'%';
+  document.getElementById('sc').textContent=correct;
+  document.getElementById('sw').textContent=wrong;
+}
+
+function renderQ(){
+  if(cur>=Q.length){showResults();return;}
+  answered=false;
+  let q=Q[order[cur]];
+  let labels=['A','B','C','D'];
+  let optsHtml=q.o.map((o,i)=>`<button class="option-btn" onclick="answer(${i})" id="opt${i}"><span class="opt-label">${labels[i]}</span><span>${o.replace(/^[A-D]\)\s*/,'')}</span></button>`).join('');
+  document.getElementById('quiz-area').innerHTML=`
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="q-num">Q${cur+1} / ${Q.length}</span>
+        <span class="q-type ${q.t}">${q.t}</span>
+      </div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">${optsHtml}</div>
+      <div class="feedback-box" id="fb"></div>
+      <button class="next-btn" id="nbtn" onclick="nextQ()">Next Question →</button>
+    </div>`;
+  updateHeader();
+}
+
+function answer(idx){
+  if(answered)return;
+  answered=true;
+  let q=Q[order[cur]];
+  let btns=document.querySelectorAll('.option-btn');
+  btns.forEach(b=>b.disabled=true);
+  let fb=document.getElementById('fb');
+  if(idx===q.a){
+    correct++;
+    catScore[q.t].c++;
+    btns[idx].classList.add('correct');
+    fb.className='feedback-box show fb-correct';
+    fb.innerHTML=`<span class="feedback-icon">✓</span><strong>Correct!</strong> ${q.e}`;
+  } else {
+    wrong++;
+    btns[idx].classList.add('wrong');
+    btns[q.a].classList.add('reveal');
+    fb.className='feedback-box show fb-wrong';
+    fb.innerHTML=`<span class="feedback-icon">✗</span><strong>Incorrect.</strong> ${q.e}`;
+  }
+  document.getElementById('sc').textContent=correct;
+  document.getElementById('sw').textContent=wrong;
+  let nb=document.getElementById('nbtn');
+  nb.classList.add('show');
+  nb.textContent=cur+1<Q.length?'Next Question →':'See Results';
+}
+
+function nextQ(){cur++;renderQ();}
+
+function showResults(){
+  document.getElementById('quiz-area').style.display='none';
+  let r=document.getElementById('results');
+  r.classList.add('show');
+  let pct=Math.round((correct/Q.length)*100);
+  document.getElementById('rpct').textContent=pct+'%';
+  document.getElementById('rright').textContent=correct;
+  document.getElementById('rwrong').textContent=wrong;
+  let titles=['❌ Needs Work','📚 Keep Studying','👍 Good Effort','⭐ Great Job!','🏆 Excellent!'];
+  let ti=Math.floor(pct/20);
+  document.getElementById('rtitle').textContent=titles[Math.min(ti,4)];
+  document.getElementById('rsub').textContent=`You scored ${correct} out of ${Q.length} (${pct}%)`;
+  let cats=[['tracing','Tracing'],['code','Code'],['theory','Theoretical'],['tricky','Tricky']];
+  let cmap={tracing:'Tracing',code:'Code',theory:'Theoretical',tricky:'Tricky'};
+  Object.entries(catScore).forEach(([k,v])=>{
+    let key=k==='Theoretical'?'theory':k==='Code'?'code':k.toLowerCase();
+    let pct2=v.t>0?Math.round((v.c/v.t)*100):0;
+    let el=document.getElementById('cb-'+key);
+    let sl=document.getElementById('cs-'+key);
+    if(el)el.style.width=pct2+'%';
+    if(sl)sl.textContent=`${v.c}/${v.t}`;
+  });
+  setTimeout(()=>{
+    document.querySelectorAll('.cat-bar-fill').forEach(el=>{el.style.transition='width 1s ease';});
+  },100);
+}
+
+restart();
+</script>
+</body>
+</html>
